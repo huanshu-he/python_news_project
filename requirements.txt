@@ -1,0 +1,11 @@
+#pip install -r requirements.txt
+
+fastapi
+uvicorn
+sqlalchemy
+aiomysql
+redis
+pydantic
+passlib[argon2]
+cryptography
+#bcrypt
