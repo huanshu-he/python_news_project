@@ -23,12 +23,12 @@ class Category(Base):
     # 定义字段
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, comment="分类ID")
     name: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, comment="分类名称")
-    sortOrder: Mapped[int] = mapped_column(Integer, name='sort_order', default=0, nullable=False, comment="排序")
+    sort_order: Mapped[int] = mapped_column(Integer, name='sort_order', default=0, nullable=False, comment="排序")
     # datetime: python类型, DateTime: ORM类型, 默认值: datetime.now: 当前时间, 注意不要加(),也就是创建数据时才调用datetime.now
-    createdAt: Mapped[datetime] = mapped_column(DateTime, name='created_at', default=datetime.now, nullable=False,
+    created_at: Mapped[datetime] = mapped_column(DateTime, name='created_at', default=datetime.now, nullable=False,
                                                 comment="创建时间")
     # onupdate: 每次更新数据时, 调用当前时间作为更新时间
-    updatedAt: Mapped[datetime] = mapped_column(DateTime, name='updated_at', default=datetime.now,
+    updated_at: Mapped[datetime] = mapped_column(DateTime, name='updated_at', default=datetime.now,
                                                 onupdate=datetime.now, nullable=False,
                                                 comment="更新时间")
 
@@ -64,12 +64,12 @@ class News(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False, comment="新闻内容")
     image: Mapped[Optional[str]] = mapped_column(String(255), comment="封面图片URL")
     author: Mapped[Optional[str]] = mapped_column(String(50), comment="作者")
-    categoryId: Mapped[int] = mapped_column(Integer, ForeignKey('news_category.id'), name='category_id',  nullable=False, comment="分类ID")
+    category_id: Mapped[int] = mapped_column(Integer, ForeignKey('news_category.id'), name='category_id',  nullable=False, comment="分类ID")
     views: Mapped[int] = mapped_column(Integer, default=0, nullable=False, comment="浏览量")
-    publishTime: Mapped[datetime] = mapped_column(DateTime, name='publish_time', default=datetime.now,
+    publish_time: Mapped[datetime] = mapped_column(DateTime, name='publish_time', default=datetime.now,
                                                    comment="发布时间")
-    createdAt: Mapped[datetime] = mapped_column(DateTime, name='created_at', default=datetime.now, comment="创建时间")
-    updatedAt: Mapped[datetime] = mapped_column(DateTime, name='updated_at', default=datetime.now,
+    created_at: Mapped[datetime] = mapped_column(DateTime, name='created_at', default=datetime.now, comment="创建时间")
+    updated_at: Mapped[datetime] = mapped_column(DateTime, name='updated_at', default=datetime.now,
                                                 onupdate=datetime.now,
                                                 comment="更新时间")
 

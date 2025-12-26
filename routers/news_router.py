@@ -1,12 +1,13 @@
 """
 新闻模块统一路由
 """
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from conf.db_conf import get_db
-from crud.news_curd import get_categories
+from crud.news_curd import get_categories, get_news_count, get_news_list, get_news_detail, update_news_views, \
+    get_related_news
 from models.news import Category
 from utils.response_handlers import success_response
 
@@ -43,26 +44,37 @@ async def read_categories(skip: int = Query(0, ge=0), limit: int = Query(20, ge=
     data = await get_categories(skip, limit, db)
     return success_response(data)
 
-#
-# @router.get("/list")
-# async def read_news(category_id: int = Query(..., alias="categoryId"), page: int = Query(default=1),
-#                     page_size: int = Query(default=10, alias="pageSize", le=100), db: AsyncSession = Depends(get_db)):
-#     """
-#          获取新闻列表接口（支持分页和分类筛选）
-#
-#         Args:
-#             category_id (int): 分类ID，必填参数，通过查询参数categoryId传入
-#             page (int, optional): 页码，从1开始，默认为第1页
-#             page_size (int, optional): 每页显示的新闻数量，最大值为100，默认为10
-#             db (AsyncSession): 通过依赖注入获取的数据库会话对象
-#
-#         Example:
-#             GET /api/news/list?categoryId=1
-#             GET /api/news/list?categoryId=1&page=2&pageSize=20
-#         """
-#     data = "await get_list(db)"
-#
-#     return success_response(data)
+
+@router.get("/list")
+async def read_news(category_id: int = Query(..., alias="categoryId"), page: int = Query(default=1),
+                    page_size: int = Query(default=10, alias="pageSize", le=100), db: AsyncSession = Depends(get_db)):
+    """
+    查询新闻列表
+    :param category_id: 分类ID
+    :param page: 页码
+    :param page_size: 每页数量
+    :param db: 数据库会话
+    :return: 新闻列表
+    """
+    # 计算跳过的记录数
+    skip = (page - 1) * page_size
+
+    # 获取新闻列表
+    news_list = await get_news_list(db, category_id, skip, page_size)
+
+    # 获取新闻总数
+    total = await get_news_count(db, category_id)
+
+    # 判断是否有更多数据
+    has_more = total > skip + page_size
+
+    response_data = {
+        "list": news_list,
+        "total": total,
+        "hasMore": has_more
+    }
+
+    return success_response(message="成功查询新闻列表", data=response_data)
 
 
 ## ...............
@@ -72,18 +84,34 @@ async def read_categories(skip: int = Query(0, ge=0), limit: int = Query(20, ge=
 @router.get("/detail")
 async def read_news_detail(news_id: int=Query(..., alias="id"), db: AsyncSession = Depends(get_db)):
     """
-        获取新闻详情接口
-
-        Args:
-            news_id (int): 新闻ID，必填参数，通过查询参数id传入
-            db (AsyncSession): 通过依赖注入获取的数据库会话对象
-        Example:
-            GET /api/news/detail?id=1
+    查询新闻详情
+    :param news_id: 新闻ID
+    :param db: 数据库会话
+    :return: 新闻详情
     """
+    # 获取新闻详情
+    news = await get_news_detail(db, news_id)
+    if not news:
+        raise HTTPException(status_code=404, detail="新闻不存在")
+
+    # 更新新闻浏览量
+    await update_news_views(db, news_id)
+
+    # 获取相关新闻数据
+    related_news = await get_related_news(news_id, news, db)
 
 
-    return {
-        "code": 200,
-        "message": "success",
-        "data": "新闻详情"
+    response_data = {
+        "id": news.id,
+        "title": news.title,
+        "content": news.content,
+        "image": news.image,
+        "author": news.author,
+        "publishTime": news.publish_time,  # 注意字段名映射
+        "categoryId": news.category_id,  # 注意字段名映射
+        "views": news.views,
+        "relatedNews": related_news
     }
+
+
+    return success_response(message="成功查询新闻详情", data=response_data)
