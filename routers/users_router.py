@@ -5,8 +5,8 @@ from fastapi import HTTPException
 
 from conf.db_conf import get_db
 from crud.users_curd import get_user_by_username, create_user, create_user_token, authenticate_user, get_user_by_token, \
-    change_user_info
-from schemas.users import UserRegisterLoginRequest, UserUpdateRequest
+    change_user_info, change_user_password
+from schemas.users import UserRegisterLoginRequest, UserUpdateRequest, UserUpdatePasswordRequest
 from utils.response_handlers import success_response
 
 router = APIRouter(
@@ -100,3 +100,29 @@ async def update_user_info(user_update_data: UserUpdateRequest, authorization: s
         raise HTTPException(status_code=400, detail="用户没有登录")
     user = await change_user_info(user_update_data, db, user)
     return success_response(message="更新用户信息成功", data=user)
+
+
+# 用户模块修改用户密码
+
+
+
+@router.put("/password")
+async def update_user_password(password_data: UserUpdatePasswordRequest,
+                               authorization: str = Header(None),
+                               db: AsyncSession = Depends(get_db)):
+    """
+    修改用户密码
+    :param user_update_password_data:
+    :param authorization:
+    :return:
+    """
+    old_password = password_data.old_password
+    new_password = password_data.new_password
+    user = await get_user_by_token(authorization, db)
+    if not user:
+        raise HTTPException(status_code=400, detail="用户没有登录")
+    if not await authenticate_user(user.username, old_password, db):
+        raise HTTPException(status_code=400, detail="旧密码错误")
+    user = await change_user_password(new_password, db, user)
+    return success_response(message="修改用户密码成功", data=user)
+

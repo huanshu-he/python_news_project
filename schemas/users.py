@@ -46,3 +46,8 @@ class UserUpdateRequest(BaseModel):
     #             "bio": "Updated bio"
     #         }
     #     }
+
+
+class UserUpdatePasswordRequest(BaseModel):
+    old_password: str = Field(..., alias="oldPassword", min_length=3, max_length=20)  # 必传
+    new_password: str = Field(..., alias="newPassword", min_length=3, max_length=20)

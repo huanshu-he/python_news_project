@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
-from sqlalchemy import select
+from sqlalchemy import select, Update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.users import UserToken, User
@@ -206,4 +206,21 @@ async def change_user_info(user_data: UserUpdateRequest, db: AsyncSession, user:
     await db.commit()
     await db.refresh(user)  # 刷新数据, 重新从数据库获取最新数据
 
+    return user
+
+
+# 修改用户密码
+async def change_user_password(new_password: str, db: AsyncSession, user: User):
+    """
+    修改用户密码
+    :param new_password:
+    :param db:
+    :param user:
+    :return:
+    """
+    # 使用Update更新用户密码
+    stmt = Update(User).where(User.id == user.id).values(password=get_password_hash(new_password))
+    await db.execute(stmt)
+    await db.commit()
+    await db.refresh(user)
     return user
