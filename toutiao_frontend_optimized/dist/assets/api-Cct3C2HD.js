@@ -1,0 +1,1 @@
+const a={baseURL:"http://127.0.0.1:8000"},o={apiEndpoint:"https://open.bigmodel.cn/api/paas/v4/chat/completions",apiKey:"f0e9a8e40b624e72a7057abb174170fb.j7pMKwSoHzjL7Hf7",model:"glm-4.5-flash"};export{a,o as b};
